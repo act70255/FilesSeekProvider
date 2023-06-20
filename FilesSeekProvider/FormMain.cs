@@ -1,6 +1,7 @@
 using Microsoft.VisualBasic.Devices;
 using System.IO;
 using System.Text.RegularExpressions;
+using System.Windows.Forms;
 
 namespace FilesSeekProvider
 {
@@ -34,11 +35,18 @@ namespace FilesSeekProvider
         {
             InitializeComponent();
             Extentions = new List<string> { ".txt", ".log", ".cs" };
-            this.Load += (s, e) => { ActiveControl = txtKeyword; };
-
+            this.Load += (s, e) =>
+            {
+                ActiveControl = txtKeyword;
+                LstFiles_SizeChanged(lstFiles, null);
+                LstFiles_SizeChanged(lstResultRow, null);
+                pnlResult.Dock = DockStyle.Fill;
+            };
+            lstFiles.SizeChanged += LstFiles_SizeChanged;
+            lstResultRow.SizeChanged += LstFiles_SizeChanged;
         }
 
-        void SeekInFolder(string path, string keyword)
+        void SeekInFolder(string path, string keyword, bool isRegex = false, bool ignoreCase = false)
         {
             #region Input validation
             if (string.IsNullOrEmpty(path))
@@ -60,7 +68,7 @@ namespace FilesSeekProvider
             {
                 Dictionary<int, string> matchs = new Dictionary<int, string>();
                 var fileContent = File.ReadAllLines(file);
-                if (chkRegex.Checked)
+                if (isRegex)
                 {
                     matchs = fileContent.Select((s, i) => new { Text = s, rowIndex = i + 1 })
                         .Where(f => Regex.IsMatch(f.Text, keyword))
@@ -70,7 +78,7 @@ namespace FilesSeekProvider
                 {
                     matchs = fileContent
                         .Select((s, i) => new { Text = s, rowIndex = i + 1 })
-                        .Where(f => f.Text.Contains(keyword, chkIgnoreCase.Checked ? StringComparison.OrdinalIgnoreCase : StringComparison.CurrentCulture))
+                        .Where(f => f.Text.Contains(keyword, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.CurrentCulture))
                         .ToDictionary(d => d.rowIndex, d => d.Text);
                 }
                 if (matchs.Any())
@@ -87,6 +95,8 @@ namespace FilesSeekProvider
             {
                 MessageBox.Show("Match not found");
             }
+            if (!chkRegex.Checked)
+                txtFilter.Text = txtKeyword.Text;
         }
 
         void PickFolder()
@@ -98,18 +108,40 @@ namespace FilesSeekProvider
                 if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
                 {
                     Path = fbd.SelectedPath;
+                    if (!string.IsNullOrEmpty(txtKeyword.Text))
+                        btnSearch_Click(null, null);
                 }
             }
         }
 
+        void HighLightFilter(RichTextBox rtx, string filterKey)
+        {
+            ClearHighLight(rtxResult);
+            int startindex = 0;
+            while (startindex < rtx.TextLength)
+            {
+                int wordstartIndex = rtx.Find(filterKey, startindex, RichTextBoxFinds.None);
+                if (wordstartIndex != -1)
+                {
+                    rtx.SelectionStart = wordstartIndex;
+                    rtx.SelectionLength = filterKey.Length;
+                    rtx.SelectionBackColor = Color.Lime;
+                }
+                else
+                    break;
+                startindex += wordstartIndex + filterKey.Length;
+            }
+        }
+        void ClearHighLight(RichTextBox rtx)
+        {
+            rtx.SelectionStart = 0;
+            rtx.SelectAll();
+            rtx.SelectionBackColor = Color.White;
+        }
+
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (keyData == Keys.Escape)
-            {
-                txtKeyword.Clear();
-                txtKeyword.Focus();
-            }
-            else if (keyData == Keys.F1)
+            if (keyData == Keys.F1)
             {
                 chkIgnoreCase.Checked = !chkRegex.Checked;
             }
@@ -119,18 +151,26 @@ namespace FilesSeekProvider
             }
             else if (keyData == Keys.F3)
             {
-                txtPath_Click(null, null);
+                txtKeyword.Clear();
+                txtKeyword.Focus();
             }
             else if (keyData == Keys.F4)
             {
-                btnSearch_Click(null, null);
+                txtPath_Click(null, null);
             }
             else if (keyData == Keys.F5)
             {
+                btnSearch_Click(null, null);
                 lstFiles.Focus();
             }
 
             return base.ProcessCmdKey(ref msg, keyData);
+        }
+
+        private void LstFiles_SizeChanged(object? sender, EventArgs e)
+        {
+            if (sender is ListView view)
+                view.Columns[0].Width = view.Width;
         }
 
         private void txtPath_Click(object sender, EventArgs e)
@@ -139,7 +179,7 @@ namespace FilesSeekProvider
         }
         private void btnSearch_Click(object sender, EventArgs e)
         {
-            SeekInFolder(Path, txtKeyword.Text);
+            SeekInFolder(Path, txtKeyword.Text, chkRegex.Checked, chkIgnoreCase.Checked);
         }
 
         private void txtKeyword_KeyPress(object sender, KeyPressEventArgs e)
@@ -158,12 +198,37 @@ namespace FilesSeekProvider
             if (sender is ListView view && view.SelectedItems.Count > 0)
             {
                 var pickFile = view.SelectedItems[0].Text;
+
                 lblInfos.Text = pickFile;
                 if (MatchResultList.FirstOrDefault(f => f.Path == pickFile) is MatchDataObject obj)
                 {
-                    //var ds = obj.MatchValuePairs.Select(s => new { Index = s.Key, Content = s.Value });
-                    //gvResult.DataSource = ds.ToList();
-                    lblResult.Text = string.Join(Environment.NewLine, obj.MatchValuePairs.Select(s => $"[{s.Key}]\t{s.Value}").ToArray());
+                    lstResultRow.Items.Clear();
+                    foreach (var result in obj.MatchValuePairs.Select(s => s.Key).ToArray())
+                    {
+                        lstResultRow.Items.Add(result.ToString());
+                    }
+                }
+            }
+        }
+
+        private void lstResultRow_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (sender is ListView rowView && rowView.SelectedItems.Count > 0 && lstFiles.SelectedItems.Count > 0)
+            {
+                if (MatchResultList.FirstOrDefault(f => f.Path == lstFiles.SelectedItems[0].Text) is MatchDataObject obj
+                    && obj.MatchValuePairs.FirstOrDefault(f => f.Key.ToString() == rowView.SelectedItems[0].Text) is KeyValuePair<int, string> value)
+                {
+                    if (value.Value.Length > 1000)
+                    {
+                        lblResult.Text = value.Value;
+                        lblResult.Visible = true;
+                    }
+                    else
+                    {
+                        lblResult.Visible = false;
+                        rtxResult.Text = value.Value;
+                        txtFilter_TextChanged(null, null);
+                    }
                 }
             }
         }
@@ -174,6 +239,14 @@ namespace FilesSeekProvider
                 return;
 
             System.Windows.Forms.Clipboard.SetText(lblInfos.Text);
+        }
+
+        private void txtFilter_TextChanged(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(txtFilter.Text))
+                ClearHighLight(rtxResult);
+            else
+                HighLightFilter(rtxResult, txtFilter.Text);
         }
     }
 
