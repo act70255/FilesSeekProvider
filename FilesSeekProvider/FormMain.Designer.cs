@@ -157,6 +157,7 @@ namespace FilesSeekProvider
             // lblResult
             // 
             lblResult.Dock = DockStyle.Fill;
+            lblResult.HideSelection = false;
             lblResult.Location = new Point(90, 23);
             lblResult.Multiline = true;
             lblResult.Name = "lblResult";
@@ -238,6 +239,7 @@ namespace FilesSeekProvider
             lstFiles.Name = "lstFiles";
             lstFiles.Size = new Size(397, 615);
             lstFiles.TabIndex = 1;
+            lstFiles.Tag = -1;
             lstFiles.UseCompatibleStateImageBehavior = false;
             lstFiles.View = View.Details;
             lstFiles.SelectedIndexChanged += lstFiles_SelectedIndexChanged;
@@ -295,7 +297,6 @@ namespace FilesSeekProvider
         private Button btnSearch;
         private Panel pnlResult;
         private ListView lstFiles;
-        private StatusStrip stInfo;
         private Label lblFilsContent;
         private TextBox txtKeyword;
         private Panel pnlInfo;

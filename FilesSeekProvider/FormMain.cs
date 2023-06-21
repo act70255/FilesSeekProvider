@@ -35,11 +35,15 @@ namespace FilesSeekProvider
         {
             InitializeComponent();
             Extentions = new List<string> { ".txt", ".log", ".cs" };
+            //lstFiles.AutoResizeColumns(ColumnHeaderAutoResizeStyle.ColumnContent);
             this.Load += (s, e) =>
             {
                 ActiveControl = txtKeyword;
-                LstFiles_SizeChanged(lstFiles, null);
-                LstFiles_SizeChanged(lstResultRow, null);
+
+                lstFiles.Columns[0].Width = -1;
+                LstFiles_SizeChanged(lstFiles, new EventArgs());
+                LstFiles_SizeChanged(lstResultRow, new EventArgs());
+
                 pnlResult.Dock = DockStyle.Fill;
             };
             lstFiles.SizeChanged += LstFiles_SizeChanged;
@@ -109,14 +113,48 @@ namespace FilesSeekProvider
                 {
                     Path = fbd.SelectedPath;
                     if (!string.IsNullOrEmpty(txtKeyword.Text))
-                        btnSearch_Click(null, null);
+                        btnSearch_Click(btnSearch, new EventArgs());
                 }
             }
         }
 
+        void UpdateHighLightFilter()
+        {
+            if (lblResult.Visible)
+            {
+                if (string.IsNullOrEmpty(txtFilter.Text))
+                    ClearHighLight(lblResult);
+                else
+                    HighLightFilter(lblResult, txtFilter.Text);
+            }
+            else
+            {
+                if (string.IsNullOrEmpty(txtFilter.Text))
+                    ClearHighLight(rtxResult);
+                else
+                    HighLightFilter(rtxResult, txtFilter.Text);
+            }
+        }
+
+        void HighLightFilter(TextBox txt, string filterKey)
+        {
+            ClearHighLight(txt);
+            int wordstartIndex = txt.Text.IndexOf(filterKey);
+            if (wordstartIndex != -1)
+            {
+                txt.SelectionStart = wordstartIndex;
+                txt.SelectionLength = filterKey.Length;
+            }
+        }
+        void ClearHighLight(TextBox txt)
+        {
+            txt.SelectionStart = 0;
+            txt.SelectionLength = 0;
+        }
+
         void HighLightFilter(RichTextBox rtx, string filterKey)
         {
-            ClearHighLight(rtxResult);
+            ClearHighLight(rtx);
             int startindex = 0;
             while (startindex < rtx.TextLength)
             {
@@ -132,6 +170,7 @@ namespace FilesSeekProvider
                 startindex += wordstartIndex + filterKey.Length;
             }
         }
+
         void ClearHighLight(RichTextBox rtx)
         {
             rtx.SelectionStart = 0;
@@ -143,7 +182,7 @@ namespace FilesSeekProvider
         {
             if (keyData == Keys.F1)
             {
-                chkIgnoreCase.Checked = !chkRegex.Checked;
+                chkIgnoreCase.Checked = !chkIgnoreCase.Checked;
             }
             else if (keyData == Keys.F2)
             {
@@ -156,11 +195,11 @@ namespace FilesSeekProvider
             }
             else if (keyData == Keys.F4)
             {
-                txtPath_Click(null, null);
+                txtPath_Click(txtPath, new EventArgs());
             }
             else if (keyData == Keys.F5)
             {
-                btnSearch_Click(null, null);
+                btnSearch_Click(btnSearch, new EventArgs());
                 lstFiles.Focus();
             }
 
@@ -170,7 +209,7 @@ namespace FilesSeekProvider
         private void LstFiles_SizeChanged(object? sender, EventArgs e)
         {
             if (sender is ListView view)
-                view.Columns[0].Width = view.Width;
+                view.Columns[0].Width = view.Tag?.ToString() == "-1" ? -1 : view.Width;
         }
 
         private void txtPath_Click(object sender, EventArgs e)
@@ -187,9 +226,9 @@ namespace FilesSeekProvider
             if (e.KeyChar == (char)Keys.Return)
             {
                 if (string.IsNullOrEmpty(Path))
-                    txtPath_Click(null, null);
+                    txtPath_Click(txtPath, new EventArgs());
                 else
-                    btnSearch_Click(null, null);
+                    btnSearch_Click(btnSearch, new EventArgs());
             }
         }
 
@@ -227,7 +266,7 @@ namespace FilesSeekProvider
                     {
                         lblResult.Visible = false;
                         rtxResult.Text = value.Value;
-                        txtFilter_TextChanged(null, null);
+                        txtFilter_TextChanged(txtFilter, new EventArgs());
                     }
                 }
             }
@@ -243,10 +282,7 @@ namespace FilesSeekProvider
 
         private void txtFilter_TextChanged(object sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(txtFilter.Text))
-                ClearHighLight(rtxResult);
-            else
-                HighLightFilter(rtxResult, txtFilter.Text);
+            UpdateHighLightFilter();
         }
     }
 
