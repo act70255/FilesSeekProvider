@@ -75,7 +75,7 @@ namespace FilesSeekProvider
                 if (isRegex)
                 {
                     matchs = fileContent.Select((s, i) => new { Text = s, rowIndex = i + 1 })
-                        .Where(f => Regex.IsMatch(f.Text, keyword))
+                        .Where(f => Regex.IsMatch(f.Text, keyword, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None))
                         .ToDictionary(d => d.rowIndex, d => d.Text);
                 }
                 else
