@@ -60,12 +60,14 @@ namespace FilesSeekProvider
                 LstFiles_SizeChanged(lstFiles, new EventArgs());
                 LstFiles_SizeChanged(lstResultRow, new EventArgs());
 
-                pnlResult.Dock = DockStyle.Fill;
+                System.Windows.Forms.ToolTip toolTip = new System.Windows.Forms.ToolTip();
+                toolTip.SetToolTip(btnFilterPrev, "F9");
+                toolTip.SetToolTip(btnFilterNext, "F10");
             };
             lstFiles.SizeChanged += LstFiles_SizeChanged;
             lstResultRow.SizeChanged += LstFiles_SizeChanged;
         }
-        
+
         void SeekInFolder(string path, string keyword, bool isRegex = false, bool ignoreCase = false)
         {
             #region Input validation
@@ -133,13 +135,13 @@ namespace FilesSeekProvider
                 }
             }
         }
-        
+
         void UpdateHighLightFilter()
         {
             if (string.IsNullOrEmpty(txtFilter.Text))
                 ClearHighLight(lblResult);
             else
-                HighLightFilter(lblResult, txtFilter.Text);
+                HighLightFilter(lblResult, txtFilter.Text, SelectionIndexStart);
         }
 
         void HighLightFilter(TextBox txt, string filterKey, int wordstartIndex = 0)
@@ -162,7 +164,7 @@ namespace FilesSeekProvider
             }
             else
             {
-                MessageBox.Show("No other results");
+                MessageBox.Show("Seek end");
             }
         }
 
@@ -204,7 +206,7 @@ namespace FilesSeekProvider
             {
                 btnFilterNext_Click(btnFilterNext, new EventArgs());
             }
-
+            
             return base.ProcessCmdKey(ref msg, keyData);
         }
 

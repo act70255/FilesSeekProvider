@@ -86,13 +86,14 @@ namespace FilesSeekProvider
             // chkIgnoreCase
             // 
             chkIgnoreCase.AutoSize = true;
-            chkIgnoreCase.Location = new Point(906, 35);
+            chkIgnoreCase.Location = new Point(906, 7);
             chkIgnoreCase.Margin = new Padding(0);
             chkIgnoreCase.Name = "chkIgnoreCase";
             chkIgnoreCase.Size = new Size(114, 19);
             chkIgnoreCase.TabIndex = 9;
             chkIgnoreCase.Text = "[F1]Ignore Case";
             chkIgnoreCase.UseVisualStyleBackColor = true;
+            chkIgnoreCase.Checked = true;
             // 
             // lblKeyword
             // 
@@ -133,7 +134,7 @@ namespace FilesSeekProvider
             // chkRegex
             // 
             chkRegex.AutoSize = true;
-            chkRegex.Location = new Point(906, 7);
+            chkRegex.Location = new Point(906, 35);
             chkRegex.Margin = new Padding(0);
             chkRegex.Name = "chkRegex";
             chkRegex.Size = new Size(118, 19);
@@ -159,6 +160,7 @@ namespace FilesSeekProvider
             pnlResult.Controls.Add(lblFilsContent);
             pnlResult.Location = new Point(37, 36);
             pnlResult.Name = "pnlResult";
+            pnlResult.Dock = DockStyle.Fill;
             pnlResult.Size = new Size(748, 469);
             pnlResult.TabIndex = 1;
             // 
