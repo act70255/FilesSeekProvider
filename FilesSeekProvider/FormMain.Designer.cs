@@ -1,4 +1,4 @@
-﻿using FilesSeekProvider.Compoment;
+﻿using System.Collections;
 
 namespace FilesSeekProvider
 {
@@ -23,13 +23,14 @@ namespace FilesSeekProvider
         }
 
         #region Windows Form Designer generated code
-
+        
         /// <summary>
         ///  Required method for Designer support - do not modify
         ///  the contents of this method with the code editor.
         /// </summary>
         private void InitializeComponent()
         {
+            ColumnHeader columnResult;
             pnlSearch = new Panel();
             chkIgnoreCase = new CheckBox();
             lblKeyword = new Label();
@@ -40,24 +41,32 @@ namespace FilesSeekProvider
             btnSearch = new Button();
             pnlResult = new Panel();
             lblResult = new TextBox();
-            rtxResult = new ExtRichTextBox();
             lstResultRow = new ListView();
             columnRow = new ColumnHeader();
+            pnlFilter = new Panel();
             txtFilter = new TextBox();
+            btnFilterPrev = new Button();
+            btnFilterNext = new Button();
             lblFilsContent = new Label();
             spResult = new SplitContainer();
             lstFiles = new ListView();
-            columnResult = new ColumnHeader();
             pnlInfo = new Panel();
             lblInfos = new Label();
+            columnResult = new ColumnHeader();
             pnlSearch.SuspendLayout();
             pnlResult.SuspendLayout();
+            pnlFilter.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)spResult).BeginInit();
             spResult.Panel1.SuspendLayout();
             spResult.Panel2.SuspendLayout();
             spResult.SuspendLayout();
             pnlInfo.SuspendLayout();
             SuspendLayout();
+            // 
+            // columnResult
+            // 
+            columnResult.Text = "Result Path";
+            columnResult.Width = 600;
             // 
             // pnlSearch
             // 
@@ -145,9 +154,8 @@ namespace FilesSeekProvider
             // pnlResult
             // 
             pnlResult.Controls.Add(lblResult);
-            pnlResult.Controls.Add(rtxResult);
             pnlResult.Controls.Add(lstResultRow);
-            pnlResult.Controls.Add(txtFilter);
+            pnlResult.Controls.Add(pnlFilter);
             pnlResult.Controls.Add(lblFilsContent);
             pnlResult.Location = new Point(37, 36);
             pnlResult.Name = "pnlResult";
@@ -167,15 +175,6 @@ namespace FilesSeekProvider
             lblResult.TabIndex = 4;
             lblResult.WordWrap = false;
             // 
-            // rtxResult
-            // 
-            rtxResult.Dock = DockStyle.Fill;
-            rtxResult.Location = new Point(90, 23);
-            rtxResult.Name = "rtxResult";
-            rtxResult.Size = new Size(658, 446);
-            rtxResult.TabIndex = 4;
-            rtxResult.Text = "";
-            // 
             // lstResultRow
             // 
             lstResultRow.Alignment = ListViewAlignment.Default;
@@ -194,14 +193,47 @@ namespace FilesSeekProvider
             columnRow.Text = "Row Index";
             columnRow.Width = 90;
             // 
+            // pnlFilter
+            // 
+            pnlFilter.Controls.Add(txtFilter);
+            pnlFilter.Controls.Add(btnFilterPrev);
+            pnlFilter.Controls.Add(btnFilterNext);
+            pnlFilter.Dock = DockStyle.Top;
+            pnlFilter.Location = new Point(0, 0);
+            pnlFilter.Name = "pnlFilter";
+            pnlFilter.Size = new Size(748, 23);
+            pnlFilter.TabIndex = 6;
+            // 
             // txtFilter
             // 
-            txtFilter.Dock = DockStyle.Top;
+            txtFilter.Dock = DockStyle.Fill;
             txtFilter.Location = new Point(0, 0);
             txtFilter.Name = "txtFilter";
-            txtFilter.Size = new Size(748, 23);
+            txtFilter.Size = new Size(698, 23);
             txtFilter.TabIndex = 3;
             txtFilter.TextChanged += txtFilter_TextChanged;
+            // 
+            // btnFilterPrev
+            // 
+            btnFilterPrev.Dock = DockStyle.Right;
+            btnFilterPrev.Location = new Point(698, 0);
+            btnFilterPrev.Name = "btnFilterPrev";
+            btnFilterPrev.Size = new Size(25, 23);
+            btnFilterPrev.TabIndex = 1;
+            btnFilterPrev.Text = "<";
+            btnFilterPrev.UseVisualStyleBackColor = true;
+            btnFilterPrev.Click += btnFilterPrev_Click;
+            // 
+            // btnFilterNext
+            // 
+            btnFilterNext.Dock = DockStyle.Right;
+            btnFilterNext.Location = new Point(723, 0);
+            btnFilterNext.Name = "btnFilterNext";
+            btnFilterNext.Size = new Size(25, 23);
+            btnFilterNext.TabIndex = 0;
+            btnFilterNext.Text = ">";
+            btnFilterNext.UseVisualStyleBackColor = true;
+            btnFilterNext.Click += btnFilterNext_Click;
             // 
             // lblFilsContent
             // 
@@ -239,15 +271,10 @@ namespace FilesSeekProvider
             lstFiles.Name = "lstFiles";
             lstFiles.Size = new Size(397, 615);
             lstFiles.TabIndex = 1;
-            lstFiles.Tag = -1;
+            lstFiles.Tag = "";
             lstFiles.UseCompatibleStateImageBehavior = false;
             lstFiles.View = View.Details;
             lstFiles.SelectedIndexChanged += lstFiles_SelectedIndexChanged;
-            // 
-            // columnResult
-            // 
-            columnResult.Text = "Result Path";
-            columnResult.Width = 300;
             // 
             // pnlInfo
             // 
@@ -283,6 +310,8 @@ namespace FilesSeekProvider
             pnlSearch.PerformLayout();
             pnlResult.ResumeLayout(false);
             pnlResult.PerformLayout();
+            pnlFilter.ResumeLayout(false);
+            pnlFilter.PerformLayout();
             spResult.Panel1.ResumeLayout(false);
             spResult.Panel2.ResumeLayout(false);
             ((System.ComponentModel.ISupportInitialize)spResult).EndInit();
@@ -309,9 +338,11 @@ namespace FilesSeekProvider
         private SplitContainer spResult;
         private CheckBox chkIgnoreCase;
         private ColumnHeader columnResult;
-        private ExtRichTextBox rtxResult;
         private TextBox txtFilter;
         private ListView lstResultRow;
         public ColumnHeader columnRow;
+        private Panel pnlFilter;
+        private Button btnFilterPrev;
+        private Button btnFilterNext;
     }
 }
