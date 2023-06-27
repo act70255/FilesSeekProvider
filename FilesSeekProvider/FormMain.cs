@@ -117,6 +117,7 @@ namespace FilesSeekProvider
             {
                 MessageBox.Show("Match not found");
             }
+
             if (!chkRegex.Checked)
                 txtFilter.Text = txtKeyword.Text;
         }
@@ -206,7 +207,7 @@ namespace FilesSeekProvider
             {
                 btnFilterNext_Click(btnFilterNext, new EventArgs());
             }
-            
+
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
@@ -215,11 +216,12 @@ namespace FilesSeekProvider
             if (sender is ListView view)
                 view.Columns[0].Width = view.Tag?.ToString() == "-1" ? -1 : view.Width;
         }
-
+        
         private void txtPath_Click(object sender, EventArgs e)
         {
             PickFolder();
         }
+
         private void btnSearch_Click(object sender, EventArgs e)
         {
             SeekInFolder(Path, txtKeyword.Text, chkRegex.Checked, IgnoreCase);
@@ -241,7 +243,7 @@ namespace FilesSeekProvider
             if (sender is ListView view && view.SelectedItems.Count > 0)
             {
                 var pickFile = view.SelectedItems[0].Text;
-
+                
                 lblInfos.Text = pickFile;
                 if (MatchResultList.FirstOrDefault(f => f.Path == pickFile) is MatchDataObject obj)
                 {
@@ -284,7 +286,18 @@ namespace FilesSeekProvider
 
         private void btnFilterPrev_Click(object sender, EventArgs e)
         {
-
+            var nowIndex = SelectionIndexStart;
+            var index = lblResult.Text.LastIndexOf(txtFilter.Text, SelectionIndexStart, IgnoreCase ? StringComparison.CurrentCultureIgnoreCase : StringComparison.CurrentCulture);
+            if (index != -1)
+            {
+                lblResult.SelectionStart = index;
+                lblResult.SelectionLength = txtFilter.Text.Length;
+                lblResult.ScrollToCaret();
+            }
+            else
+            {
+                MessageBox.Show("Seek end");
+            }
         }
 
         private void btnFilterNext_Click(object sender, EventArgs e)
