@@ -23,7 +23,7 @@ namespace FilesSeekProvider
         }
 
         #region Windows Form Designer generated code
-        
+
         /// <summary>
         ///  Required method for Designer support - do not modify
         ///  the contents of this method with the code editor.
@@ -52,6 +52,7 @@ namespace FilesSeekProvider
             lstFiles = new ListView();
             pnlInfo = new Panel();
             lblInfos = new Label();
+            btnAdditionalKeyWord = new Button();
             columnResult = new ColumnHeader();
             pnlSearch.SuspendLayout();
             pnlResult.SuspendLayout();
@@ -70,6 +71,7 @@ namespace FilesSeekProvider
             // 
             // pnlSearch
             // 
+            pnlSearch.Controls.Add(btnAdditionalKeyWord);
             pnlSearch.Controls.Add(chkIgnoreCase);
             pnlSearch.Controls.Add(lblKeyword);
             pnlSearch.Controls.Add(lblPath);
@@ -86,6 +88,8 @@ namespace FilesSeekProvider
             // chkIgnoreCase
             // 
             chkIgnoreCase.AutoSize = true;
+            chkIgnoreCase.Checked = true;
+            chkIgnoreCase.CheckState = CheckState.Checked;
             chkIgnoreCase.Location = new Point(906, 7);
             chkIgnoreCase.Margin = new Padding(0);
             chkIgnoreCase.Name = "chkIgnoreCase";
@@ -93,7 +97,6 @@ namespace FilesSeekProvider
             chkIgnoreCase.TabIndex = 9;
             chkIgnoreCase.Text = "[F1]Ignore Case";
             chkIgnoreCase.UseVisualStyleBackColor = true;
-            chkIgnoreCase.Checked = true;
             // 
             // lblKeyword
             // 
@@ -158,10 +161,10 @@ namespace FilesSeekProvider
             pnlResult.Controls.Add(lstResultRow);
             pnlResult.Controls.Add(pnlFilter);
             pnlResult.Controls.Add(lblFilsContent);
-            pnlResult.Location = new Point(37, 36);
-            pnlResult.Name = "pnlResult";
             pnlResult.Dock = DockStyle.Fill;
-            pnlResult.Size = new Size(748, 469);
+            pnlResult.Location = new Point(0, 0);
+            pnlResult.Name = "pnlResult";
+            pnlResult.Size = new Size(981, 615);
             pnlResult.TabIndex = 1;
             // 
             // lblResult
@@ -173,7 +176,7 @@ namespace FilesSeekProvider
             lblResult.Name = "lblResult";
             lblResult.ReadOnly = true;
             lblResult.ScrollBars = ScrollBars.Both;
-            lblResult.Size = new Size(658, 446);
+            lblResult.Size = new Size(891, 592);
             lblResult.TabIndex = 4;
             lblResult.WordWrap = false;
             // 
@@ -184,7 +187,7 @@ namespace FilesSeekProvider
             lstResultRow.Dock = DockStyle.Left;
             lstResultRow.Location = new Point(0, 23);
             lstResultRow.Name = "lstResultRow";
-            lstResultRow.Size = new Size(90, 446);
+            lstResultRow.Size = new Size(90, 592);
             lstResultRow.TabIndex = 5;
             lstResultRow.UseCompatibleStateImageBehavior = false;
             lstResultRow.View = View.Details;
@@ -203,7 +206,7 @@ namespace FilesSeekProvider
             pnlFilter.Dock = DockStyle.Top;
             pnlFilter.Location = new Point(0, 0);
             pnlFilter.Name = "pnlFilter";
-            pnlFilter.Size = new Size(748, 23);
+            pnlFilter.Size = new Size(981, 23);
             pnlFilter.TabIndex = 6;
             // 
             // txtFilter
@@ -211,14 +214,14 @@ namespace FilesSeekProvider
             txtFilter.Dock = DockStyle.Fill;
             txtFilter.Location = new Point(0, 0);
             txtFilter.Name = "txtFilter";
-            txtFilter.Size = new Size(698, 23);
+            txtFilter.Size = new Size(931, 23);
             txtFilter.TabIndex = 3;
             txtFilter.TextChanged += txtFilter_TextChanged;
             // 
             // btnFilterPrev
             // 
             btnFilterPrev.Dock = DockStyle.Right;
-            btnFilterPrev.Location = new Point(698, 0);
+            btnFilterPrev.Location = new Point(931, 0);
             btnFilterPrev.Name = "btnFilterPrev";
             btnFilterPrev.Size = new Size(25, 23);
             btnFilterPrev.TabIndex = 1;
@@ -229,7 +232,7 @@ namespace FilesSeekProvider
             // btnFilterNext
             // 
             btnFilterNext.Dock = DockStyle.Right;
-            btnFilterNext.Location = new Point(723, 0);
+            btnFilterNext.Location = new Point(956, 0);
             btnFilterNext.Name = "btnFilterNext";
             btnFilterNext.Size = new Size(25, 23);
             btnFilterNext.TabIndex = 0;
@@ -298,6 +301,15 @@ namespace FilesSeekProvider
             lblInfos.TextAlign = ContentAlignment.MiddleLeft;
             lblInfos.Click += lblInfos_Click;
             // 
+            // btnAdditionalKeyWord
+            // 
+            btnAdditionalKeyWord.Location = new Point(1215, 15);
+            btnAdditionalKeyWord.Name = "btnAdditionalKeyWord";
+            btnAdditionalKeyWord.Size = new Size(72, 25);
+            btnAdditionalKeyWord.TabIndex = 10;
+            btnAdditionalKeyWord.Text = "+";
+            btnAdditionalKeyWord.UseVisualStyleBackColor = true;
+            // 
             // FormMain
             // 
             AutoScaleDimensions = new SizeF(7F, 15F);
@@ -346,5 +358,6 @@ namespace FilesSeekProvider
         private Panel pnlFilter;
         private Button btnFilterPrev;
         private Button btnFilterNext;
+        private Button btnAdditionalKeyWord;
     }
 }

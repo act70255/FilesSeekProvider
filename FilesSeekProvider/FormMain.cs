@@ -1,5 +1,8 @@
+using FilesSeekProvider.Extension;
 using Microsoft.VisualBasic.Devices;
 using System.IO;
+using System.Linq.Expressions;
+using System.Net.Sockets;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 
@@ -8,6 +11,7 @@ namespace FilesSeekProvider
     public partial class FormMain : Form
     {
         List<string> Extentions = new List<string>();
+        List<string> AdditionalKeyWords = new List<string>();
         public string Path
         {
             get { return txtPath.Text; }
@@ -29,6 +33,8 @@ namespace FilesSeekProvider
             get => chkIgnoreCase.Checked;
             set => chkIgnoreCase.Checked = value;
         }
+
+        FormAdditionalSourceDialog additionalKeyWordDialog = new FormAdditionalSourceDialog();
 
         public List<MatchDataObject> MatchResultList
         {
@@ -66,6 +72,20 @@ namespace FilesSeekProvider
             };
             lstFiles.SizeChanged += LstFiles_SizeChanged;
             lstResultRow.SizeChanged += LstFiles_SizeChanged;
+            btnAdditionalKeyWord.Click += BtnAdditionalKeyWord_Click;
+            additionalKeyWordDialog.SourceChanged += KeywordSourceChanged;
+        }
+
+        private void KeywordSourceChanged(object? sender, EventArgs e)
+        {
+            AdditionalKeyWords = additionalKeyWordDialog.DataSource;
+            btnAdditionalKeyWord.Text = $"+" + (AdditionalKeyWords.Any() ? $" [{AdditionalKeyWords.Count}]" : "");
+        }
+
+        private void BtnAdditionalKeyWord_Click(object? sender, EventArgs e)
+        {
+            additionalKeyWordDialog.DataSource = AdditionalKeyWords;
+            additionalKeyWordDialog.ShowDialog();
         }
 
         void SeekInFolder(string path, string keyword, bool isRegex = false, bool ignoreCase = false)
@@ -90,19 +110,28 @@ namespace FilesSeekProvider
             {
                 Dictionary<int, string> matchs = new Dictionary<int, string>();
                 var fileContent = File.ReadAllLines(file);
+                var contentList = fileContent.Select((s, i) => new ContentPairObject { Line = i + 1, Text = s }).ToList();
+                Expression<Func<ContentPairObject, bool>> filter = f => true;
                 if (isRegex)
                 {
-                    matchs = fileContent.Select((s, i) => new { Text = s, rowIndex = i + 1 })
-                        .Where(f => Regex.IsMatch(f.Text, keyword, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None))
-                        .ToDictionary(d => d.rowIndex, d => d.Text);
+                    filter = filter.AndAlso(f => Regex.IsMatch(f.Text, keyword, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None));
+                    foreach (var key in AdditionalKeyWords)
+                    {
+                        filter = filter.AndAlso(f => Regex.IsMatch(f.Text, key, ignoreCase ? RegexOptions.IgnoreCase : RegexOptions.None));
+                    }
                 }
                 else
                 {
-                    matchs = fileContent
-                        .Select((s, i) => new { Text = s, rowIndex = i + 1 })
-                        .Where(f => f.Text.Contains(keyword, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.CurrentCulture))
-                        .ToDictionary(d => d.rowIndex, d => d.Text);
+                    filter = filter.AndAlso(f => f.Text.Contains(keyword, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.CurrentCulture));
+                    foreach (var key in AdditionalKeyWords)
+                    {
+                        filter = filter.AndAlso(f => f.Text.Contains(key, ignoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.CurrentCulture));
+                    }
                 }
+
+                matchs = contentList
+                        .Where(filter.Compile())
+                        .ToDictionary(d => d.Line, d => d.Text);
                 if (matchs.Any())
                 {
                     results.Add(new MatchDataObject(file, matchs));
@@ -216,7 +245,7 @@ namespace FilesSeekProvider
             if (sender is ListView view)
                 view.Columns[0].Width = view.Tag?.ToString() == "-1" ? -1 : view.Width;
         }
-        
+
         private void txtPath_Click(object sender, EventArgs e)
         {
             PickFolder();
@@ -243,7 +272,7 @@ namespace FilesSeekProvider
             if (sender is ListView view && view.SelectedItems.Count > 0)
             {
                 var pickFile = view.SelectedItems[0].Text;
-                
+
                 lblInfos.Text = pickFile;
                 if (MatchResultList.FirstOrDefault(f => f.Path == pickFile) is MatchDataObject obj)
                 {
@@ -305,6 +334,12 @@ namespace FilesSeekProvider
             HighLightFilter(lblResult, txtFilter.Text, SelectionIndexStart + 1);
             btnFilterNext.Focus();
         }
+    }
+
+    public class ContentPairObject
+    {
+        public int Line { get; set; }
+        public string Text { get; set; }
     }
 
     public class MatchDataObject
