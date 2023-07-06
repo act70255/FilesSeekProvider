@@ -17,7 +17,6 @@ namespace Service
     {
         public List<SeekFileResultModel> SeekInFolder(string path, string[] fileExtension, string keyword, string[] keyWords, bool isIgnoreCase = false, bool isRegex = false)
         {
-            Stopwatch sw = Stopwatch.StartNew();
             #region Input validation
             if (string.IsNullOrEmpty(path))
             {
@@ -36,7 +35,6 @@ namespace Service
             if (fileExtension.Any())
                 files = files.Where(f => fileExtension.Contains(Path.GetExtension(f))).ToArray();
 
-            sw.Restart();
             tasks = files.Select(s => Task.Run(() =>
             {
                 var result = SeekInFile(s, keyword, keyWords, isIgnoreCase, isRegex);
@@ -47,23 +45,12 @@ namespace Service
                 }
             })).ToList();
             Task.WhenAll(tasks).GetAwaiter().GetResult();
-            Debug.WriteLine(sw.ElapsedMilliseconds);
-
-            //sw.Restart();
-            //files.ToList().ForEach(f =>
-            //{
-            //    var result = SeekInFile(f, keyword, keyWords, isIgnoreCase, isRegex);
-            //    if (result != null)
-            //        results.AddRange(result);
-            //});
-            //Debug.WriteLine(sw.ElapsedMilliseconds);
 
             return results.ToList();
         }
-
+        
         List<SeekFileResultModel> SeekInFile(string path, string keyword, string[] keyWords, bool isIgnoreCase = false, bool isRegex = false)
         {
-            List<SeekFileResultModel> result;
             var fileContent = File.ReadAllLines(path);
             var contentList = fileContent.Select((s, i) => new SeekResultDetailModel { Line = i + 1, Content = s }).ToList();
             Expression<Func<SeekResultDetailModel, bool>> filter = f => true;
@@ -77,18 +64,15 @@ namespace Service
                 filter = filter.AndAlso(f => f.Content.Contains(keyword, isIgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.CurrentCulture));
             }
 
+            var result = contentList
+                    .AsQueryable()
+                    .Where(filter.Compile());
             if (keyWords.Any())
-                result = contentList
-                .Where(filter.Compile()).Where(f => keyWords.Any(a => f.Content.Contains(a)))
-                .Select(s => new SeekFileResultModel(path, s)).ToList();
-            else
-                result = contentList
-                    .Where(filter.Compile())
-                    .Select(s => new SeekFileResultModel(path, s)).ToList();
+                result = result.Where(f => keyWords.Any(a => f.Content.Contains(a)));
 
             if (result.Any())
             {
-                return result;
+                return result.Select(s => new SeekFileResultModel(path, s)).ToList();
             }
             return null;
         }
