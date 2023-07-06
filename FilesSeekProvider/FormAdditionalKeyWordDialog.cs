@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace FilesSeekProvider
+namespace FilesSeeker
 {
     public class FormAdditionalSourceDialog : Form
     {

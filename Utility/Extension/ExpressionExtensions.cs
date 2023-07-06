@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Text;
 
-namespace FilesSeekProvider.Extension
+namespace Utility.Extension
 {
     public static class ExpressionExtensions
     {
