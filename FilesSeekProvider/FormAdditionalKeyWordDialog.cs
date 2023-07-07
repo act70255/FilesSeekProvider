@@ -85,18 +85,39 @@ namespace FilesSeeker
 
             this.ResumeLayout(false);
 
+            Shown += FormAdditionalSourceDialog_Shown;
+            txtKeyword.KeyPress += TxtKeyword_KeyPress;
             btnAdd.Click += BtnAdd_Click;
             btnRemove.Click += BtnRemove_Click;
+            lvContent.KeyDown += LvContent_KeyDown;
             lvContent.SelectedIndexChanged += LvContent_SelectedIndexChanged;
         }
 
-        void OnSourceChanged()
+        private void FormAdditionalSourceDialog_Shown(object? sender, EventArgs e)
         {
-            SourceChanged?.Invoke(this, EventArgs.Empty);
+            txtKeyword.Focus();
+        }
+        
+        private void LvContent_KeyDown(object? sender, KeyEventArgs e)
+        {
+            if (e.KeyCode == Keys.Delete)
+            {
+                BtnRemove_Click(btnRemove, new EventArgs());
+            }
+        }
+
+        private void TxtKeyword_KeyPress(object? sender, KeyPressEventArgs e)
+        {
+            if (e.KeyChar == (char)Keys.Return)
+            {
+                BtnAdd_Click(btnAdd, new EventArgs());
+            }
         }
 
         private void LvContent_SelectedIndexChanged(object? sender, EventArgs e)
         {
+            if (lvContent.SelectedItems.Count == 0)
+                return;
             txtKeyword.Text = lvContent.SelectedItems[0].Text;
         }
 
@@ -110,6 +131,8 @@ namespace FilesSeeker
             var keywordlist = new List<string>(DataSource);
             keywordlist.Add(txtKeyword.Text);
             DataSource = keywordlist;
+            txtKeyword.Text = string.Empty;
+            txtKeyword.Focus();
         }
 
         private void BtnRemove_Click(object? sender, EventArgs e)
@@ -122,6 +145,11 @@ namespace FilesSeeker
             var keywordlist = new List<string>(DataSource);
             keywordlist.Remove(txtKeyword.Text);
             DataSource = keywordlist;
+        }
+
+        void OnSourceChanged()
+        {
+            SourceChanged?.Invoke(this, EventArgs.Empty);
         }
     }
 }

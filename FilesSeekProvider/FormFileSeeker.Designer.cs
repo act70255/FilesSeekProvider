@@ -40,15 +40,16 @@
             btnSearch = new Button();
             spcResult = new SplitContainer();
             gvResult = new DataGridView();
+            ColumnFileName = new DataGridViewTextBoxColumn();
+            ColumnLine = new DataGridViewTextBoxColumn();
+            ColumnPath = new DataGridViewTextBoxColumn();
             bsResult = new BindingSource(components);
             rtxDetail = new RichTextBox();
             pnlFilter = new Panel();
             txtFilter = new TextBox();
             btnFilterPrev = new Button();
             btnFilterNext = new Button();
-            ColumnFileName = new DataGridViewTextBoxColumn();
-            ColumnLine = new DataGridViewTextBoxColumn();
-            ColumnPath = new DataGridViewTextBoxColumn();
+            chkHighLightMultiKey = new CheckBox();
             pnlSearch.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)spcResult).BeginInit();
             spcResult.Panel1.SuspendLayout();
@@ -81,7 +82,7 @@
             btnAdditionalKeyWord.Name = "btnAdditionalKeyWord";
             btnAdditionalKeyWord.Size = new Size(72, 25);
             btnAdditionalKeyWord.TabIndex = 10;
-            btnAdditionalKeyWord.Text = "+";
+            btnAdditionalKeyWord.Text = "[F6] +";
             btnAdditionalKeyWord.UseVisualStyleBackColor = true;
             // 
             // chkIgnoreCase
@@ -189,6 +190,27 @@
             gvResult.Size = new Size(1431, 295);
             gvResult.TabIndex = 0;
             // 
+            // ColumnFileName
+            // 
+            ColumnFileName.DataPropertyName = "FileName";
+            ColumnFileName.HeaderText = "FileName";
+            ColumnFileName.Name = "ColumnFileName";
+            ColumnFileName.ReadOnly = true;
+            // 
+            // ColumnLine
+            // 
+            ColumnLine.DataPropertyName = "Line";
+            ColumnLine.HeaderText = "Line";
+            ColumnLine.Name = "ColumnLine";
+            ColumnLine.ReadOnly = true;
+            // 
+            // ColumnPath
+            // 
+            ColumnPath.DataPropertyName = "Path";
+            ColumnPath.HeaderText = "Path";
+            ColumnPath.Name = "ColumnPath";
+            ColumnPath.ReadOnly = true;
+            // 
             // rtxDetail
             // 
             rtxDetail.Dock = DockStyle.Fill;
@@ -201,6 +223,7 @@
             // pnlFilter
             // 
             pnlFilter.Controls.Add(txtFilter);
+            pnlFilter.Controls.Add(chkHighLightMultiKey);
             pnlFilter.Controls.Add(btnFilterPrev);
             pnlFilter.Controls.Add(btnFilterNext);
             pnlFilter.Dock = DockStyle.Top;
@@ -237,26 +260,15 @@
             btnFilterNext.Text = ">";
             btnFilterNext.UseVisualStyleBackColor = true;
             // 
-            // ColumnFileName
+            // chkHighLightMultiKey
             // 
-            ColumnFileName.HeaderText = "FileName";
-            ColumnFileName.Name = "ColumnFileName";
-            ColumnFileName.ReadOnly = true;
-            ColumnFileName.DataPropertyName = "FileName";
-            // 
-            // ColumnLine
-            // 
-            ColumnLine.HeaderText = "Line";
-            ColumnLine.Name = "ColumnLine";
-            ColumnLine.ReadOnly = true;
-            ColumnLine.DataPropertyName = "Line";
-            // 
-            // ColumnPath
-            // 
-            ColumnPath.HeaderText = "Path";
-            ColumnPath.Name = "ColumnPath";
-            ColumnPath.ReadOnly = true;
-            ColumnPath.DataPropertyName = "Path";
+            chkHighLightMultiKey.AutoSize = true;
+            chkHighLightMultiKey.Dock = DockStyle.Right;
+            chkHighLightMultiKey.Location = new Point(1366, 0);
+            chkHighLightMultiKey.Name = "checkBox1";
+            chkHighLightMultiKey.Size = new Size(15, 23);
+            chkHighLightMultiKey.TabIndex = 4;
+            chkHighLightMultiKey.UseVisualStyleBackColor = true;
             // 
             // FormFileSeeker
             // 
@@ -302,5 +314,6 @@
         private DataGridViewTextBoxColumn ColumnFileName;
         private DataGridViewTextBoxColumn ColumnLine;
         private DataGridViewTextBoxColumn ColumnPath;
+        private CheckBox chkHighLightMultiKey;
     }
 }
