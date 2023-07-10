@@ -30,6 +30,7 @@
         {
             components = new System.ComponentModel.Container();
             pnlSearch = new Panel();
+            chkAdditionalFilter = new CheckBox();
             btnAdditionalKeyWord = new Button();
             chkIgnoreCase = new CheckBox();
             lblKeyword = new Label();
@@ -47,9 +48,10 @@
             rtxDetail = new RichTextBox();
             pnlFilter = new Panel();
             txtFilter = new TextBox();
+            chkHighLightMultiKey = new CheckBox();
             btnFilterPrev = new Button();
             btnFilterNext = new Button();
-            chkHighLightMultiKey = new CheckBox();
+            lblResultStatus = new Label();
             pnlSearch.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)spcResult).BeginInit();
             spcResult.Panel1.SuspendLayout();
@@ -62,6 +64,7 @@
             // 
             // pnlSearch
             // 
+            pnlSearch.Controls.Add(chkAdditionalFilter);
             pnlSearch.Controls.Add(btnAdditionalKeyWord);
             pnlSearch.Controls.Add(chkIgnoreCase);
             pnlSearch.Controls.Add(lblKeyword);
@@ -75,6 +78,15 @@
             pnlSearch.Name = "pnlSearch";
             pnlSearch.Size = new Size(1431, 60);
             pnlSearch.TabIndex = 1;
+            // 
+            // chkAdditionalFilter
+            // 
+            chkAdditionalFilter.AutoSize = true;
+            chkAdditionalFilter.Location = new Point(1293, 21);
+            chkAdditionalFilter.Name = "chkAdditionalFilter";
+            chkAdditionalFilter.Size = new Size(15, 14);
+            chkAdditionalFilter.TabIndex = 11;
+            chkAdditionalFilter.UseVisualStyleBackColor = true;
             // 
             // btnAdditionalKeyWord
             // 
@@ -162,6 +174,7 @@
             // spcResult.Panel1
             // 
             spcResult.Panel1.Controls.Add(gvResult);
+            spcResult.Panel1.Controls.Add(lblResultStatus);
             // 
             // spcResult.Panel2
             // 
@@ -237,8 +250,20 @@
             txtFilter.Dock = DockStyle.Fill;
             txtFilter.Location = new Point(0, 0);
             txtFilter.Name = "txtFilter";
-            txtFilter.Size = new Size(1381, 23);
+            txtFilter.Size = new Size(1366, 23);
             txtFilter.TabIndex = 3;
+            // 
+            // chkHighLightMultiKey
+            // 
+            chkHighLightMultiKey.AutoSize = true;
+            chkHighLightMultiKey.Checked = true;
+            chkHighLightMultiKey.CheckState = CheckState.Checked;
+            chkHighLightMultiKey.Dock = DockStyle.Right;
+            chkHighLightMultiKey.Location = new Point(1366, 0);
+            chkHighLightMultiKey.Name = "chkHighLightMultiKey";
+            chkHighLightMultiKey.Size = new Size(15, 23);
+            chkHighLightMultiKey.TabIndex = 4;
+            chkHighLightMultiKey.UseVisualStyleBackColor = true;
             // 
             // btnFilterPrev
             // 
@@ -260,15 +285,13 @@
             btnFilterNext.Text = ">";
             btnFilterNext.UseVisualStyleBackColor = true;
             // 
-            // chkHighLightMultiKey
+            // lblResultStatus
             // 
-            chkHighLightMultiKey.AutoSize = true;
-            chkHighLightMultiKey.Dock = DockStyle.Right;
-            chkHighLightMultiKey.Location = new Point(1366, 0);
-            chkHighLightMultiKey.Name = "checkBox1";
-            chkHighLightMultiKey.Size = new Size(15, 23);
-            chkHighLightMultiKey.TabIndex = 4;
-            chkHighLightMultiKey.UseVisualStyleBackColor = true;
+            lblResultStatus.Dock = DockStyle.Bottom;
+            lblResultStatus.Location = new Point(0, 280);
+            lblResultStatus.Name = "lblResultStatus";
+            lblResultStatus.Size = new Size(1431, 15);
+            lblResultStatus.TabIndex = 1;
             // 
             // FormFileSeeker
             // 
@@ -315,5 +338,7 @@
         private DataGridViewTextBoxColumn ColumnLine;
         private DataGridViewTextBoxColumn ColumnPath;
         private CheckBox chkHighLightMultiKey;
+        private CheckBox chkAdditionalFilter;
+        private Label lblResultStatus;
     }
 }

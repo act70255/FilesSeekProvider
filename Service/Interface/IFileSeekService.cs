@@ -9,6 +9,6 @@ namespace Service.Interface
 {
     public interface IFileSeekService
     {
-        List<SeekFileResultModel> SeekInFolder(string path, string[] fileExtension, string keyword, string[] keyWords, bool isIgnoreCase = false, bool isRegex = false);
+        List<SeekFileResultModel> SeekInFolder(string path, string[] fileExtension, string keyword, bool isIgnoreCase = false, bool isRegex = false);
     }
 }

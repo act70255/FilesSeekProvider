@@ -51,13 +51,27 @@ namespace FilesSeeker
             set => txtPath.Text = value;
         }
 
+        public List<string> AdditionalKeyWord
+        {
+            get { return KeyWordsDialog.DataSource; }
+        }
+
+        public bool FilterAdditionalKeywords
+        {
+            get { return chkAdditionalFilter.Checked; }
+        }
+
         public List<SeekFileResultModel> SeekResults
         {
             get => _seekResults;
             set
             {
                 _seekResults = value;
-                bsResult.DataSource = value.OrderBy(o => o.FileName);
+                var viewSource = value.AsQueryable();
+                if (FilterAdditionalKeywords && AdditionalKeyWord.Any())
+                    viewSource = viewSource.Where(f => AdditionalKeyWord.Any(a => f.Data.Content.Contains(a)));
+                lblResultStatus.Text = $"{viewSource.Count()} match results";
+                bsResult.DataSource = viewSource.OrderBy(o => o.FileName).ToList();
                 gvResult.AutoResizeColumns();
                 gvResult.AutoResizeRows();
             }
@@ -75,14 +89,14 @@ namespace FilesSeeker
                     return null;
             }
         }
-
+        
         public FormFileSeeker(IFileSeekService fileSeekService)
         {
             InitializeComponent();
             _fileSeekService = fileSeekService;
 
             FileExtentions = new string[] { ".txt", ".log", ".cs" };
-
+            
             #region Event
             Shown += (s, e) =>
             {
@@ -101,12 +115,18 @@ namespace FilesSeeker
             chkHighLightMultiKey.CheckedChanged += ChkHighLightMultiKey_CheckedChanged;
             KeyWordsDialog.FormClosing += KeyWordsDialog_FormClosing;
             KeyWordsDialog.SourceChanged += KeyWordsDialog_SourceChanged;
+            chkAdditionalFilter.CheckedChanged += ChkAdditionalFilter_CheckedChanged;
             #endregion
+        }
+
+        private void ChkAdditionalFilter_CheckedChanged(object? sender, EventArgs e)
+        {
+            SeekResults = SeekResults;
         }
 
         private void KeyWordsDialog_SourceChanged(object? sender, EventArgs e)
         {
-            btnAdditionalKeyWord.Text = "[F6] +" + (KeyWordsDialog.DataSource.Count > 0 ? $" - {KeyWordsDialog.DataSource.Count}" : "");
+            btnAdditionalKeyWord.Text = "[F6] +" + (AdditionalKeyWord.Count > 0 ? $" [{AdditionalKeyWord.Count}]" : "");
         }
 
         private void KeyWordsDialog_FormClosing(object? sender, FormClosingEventArgs e)
@@ -114,14 +134,14 @@ namespace FilesSeeker
             KeyWordsDialog.Hide();
             e.Cancel = true;
         }
-        
+
         private void ChkHighLightMultiKey_CheckedChanged(object? sender, EventArgs e)
         {
             if (sender is CheckBox view)
             {
                 if (view.Checked)
                 {
-                    foreach (var each in KeyWordsDialog.DataSource)
+                    foreach (var each in AdditionalKeyWord)
                     {
                         HighLightFilter(rtxDetail, each, Color.Orange);
                     }
@@ -133,19 +153,19 @@ namespace FilesSeeker
                 }
             }
         }
-        
+
         private void TxtFilter_TextChanged(object? sender, EventArgs e)
         {
             ClearHighLight(rtxDetail);
             HighLightFilter(rtxDetail, txtFilter.Text);
         }
-        
+
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
             if (keyData == Keys.F1)
                 IgnoreCase = !IgnoreCase;
             else if (keyData == Keys.F2)
-                chkRegex.Checked = !chkRegex.Checked;
+                IsRegex = !IsRegex;
             else if (keyData == Keys.F3)
             {
                 txtKeyword.Clear();
@@ -161,10 +181,10 @@ namespace FilesSeeker
                 BtnFilterPrev_Click(btnFilterPrev, new EventArgs());
             else if (keyData == Keys.F10)
                 BtnFilterNext_Click(btnFilterNext, new EventArgs());
-            
+
             return base.ProcessCmdKey(ref msg, keyData);
         }
-        
+
         private void TxtPath_Click(object? sender, EventArgs e)
         {
             using (var fbd = new FolderBrowserDialog())
@@ -187,7 +207,7 @@ namespace FilesSeeker
             if (string.IsNullOrEmpty(KeyWord))
                 return;
 
-            var result = _fileSeekService.SeekInFolder(FolderPath, FileExtentions, KeyWord, KeyWordsDialog.DataSource.ToArray(), IgnoreCase, IsRegex);
+            var result = _fileSeekService.SeekInFolder(FolderPath, FileExtentions, KeyWord, IgnoreCase, IsRegex);
             if (result != null && result.Any())
             {
                 FilterText = KeyWord;
@@ -269,31 +289,38 @@ namespace FilesSeeker
             if (posIndex > 0)
                 btnFilterPrev.Tag = posIndex - 1;
 
-            ShowDisplayRsult(model.Data.Content, model.Data.FilterKey, model.Data.MatchPositions[posIndex]);
+            ShowDisplayRsult(model.Data.Content, model.Data.FilterKey, model.Data.MatchPositions[Math.Min(posIndex, model.Data.MatchPositions.Count-1)]);
         }
 
         void ShowDisplayRsult(string Content, string filter, int filterStartIndex)
         {
-            int displayStartIndex = 0;
-            int displayEndIndex = Content.Length;
-            string prefix = "";
-            string nextfix = "";
-            if (filterStartIndex > 500)
+            try
             {
-                displayStartIndex = filterStartIndex - 500;
-                prefix = $"....more({displayStartIndex}){Environment.NewLine}";
+                int displayStartIndex = 0;
+                int displayEndIndex = Content.Length;
+                string prefix = "";
+                string nextfix = "";
+                if (filterStartIndex > 500)
+                {
+                    displayStartIndex = filterStartIndex - 500;
+                    prefix = $"....more({displayStartIndex}){Environment.NewLine}";
+                }
+                if (Content.Length > filterStartIndex + filter.Length + 700)
+                {
+                    displayEndIndex = filterStartIndex + filter.Length + 700;
+                    nextfix = $"{Environment.NewLine}more....({Content.Length - displayEndIndex - filter.Length})";
+                }
+
+                var displayString = $"{prefix}{Content.Substring(displayStartIndex, displayEndIndex - displayStartIndex)}{nextfix}";
+                if (rtxDetail.Text != displayString)
+                    rtxDetail.Text = displayString;
+
+                HighLightFilter(rtxDetail, filter);
             }
-            if (Content.Length > filterStartIndex + filter.Length + 700)
+            catch (Exception ex)
             {
-                displayEndIndex = filterStartIndex + filter.Length + 700;
-                nextfix = $"{Environment.NewLine}more....({Content.Length - displayEndIndex - filter.Length})";
+                Debug.WriteLine(ex);
             }
-
-            var displayString = $"{prefix}{Content.Substring(displayStartIndex, displayEndIndex - displayStartIndex)}{nextfix}";
-            if (rtxDetail.Text != displayString)
-                rtxDetail.Text = displayString;
-
-            HighLightFilter(rtxDetail, filter);
         }
 
         void ClearHighLight(RichTextBox rtx)
@@ -305,11 +332,16 @@ namespace FilesSeeker
 
         void HighLightFilter(RichTextBox rtx, string filterKey)
         {
-            HighLightFilter(rtx, filterKey, Color.Lime);
             if (rtx.Text.StartsWith("....more"))
                 HighLightFilter(rtx, "....more", Color.Tomato);
-            if (rtx.Text.Contains("....more") && rtx.Text.EndsWith(")"))
+            if (rtx.Text.Contains("more....(") && rtx.Text.EndsWith(")"))
                 HighLightFilter(rtx, "more....", Color.Tomato);
+            if (chkHighLightMultiKey.Checked && FilterAdditionalKeywords && AdditionalKeyWord.Any())
+                foreach (var each in AdditionalKeyWord)
+                {
+                    HighLightFilter(rtx, each, Color.Orange);
+                }
+            HighLightFilter(rtx, filterKey, Color.Lime);
         }
 
         void HighLightFilter(RichTextBox rtx, string filterKey, Color color)
