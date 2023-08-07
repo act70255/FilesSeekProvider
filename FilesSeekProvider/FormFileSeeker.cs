@@ -1,4 +1,5 @@
-﻿using Microsoft.Win32;
+﻿using Microsoft.VisualBasic.Devices;
+using Microsoft.Win32;
 using Service.Interface;
 using Service.Model;
 using System;
@@ -33,16 +34,16 @@ namespace FilesSeeker
             set => chkRegex.Checked = value;
         }
 
-        public string KeyWord
+        public string[] KeyWords
         {
-            get => txtKeyword.Text;
-            set => txtKeyword.Text = value;
+            get => txtKeyword.Text.Split(';');
+            set => txtKeyword.Text = string.Join(';', value);
         }
 
-        public string FilterText
+        public string[] FilterTexts
         {
-            get => txtFilter.Text;
-            set => txtFilter.Text = value;
+            get => txtFilter.Text.Split(';');
+            set => txtFilter.Text = string.Join(';', value);
         }
 
         public string FolderPath
@@ -78,25 +79,18 @@ namespace FilesSeeker
         }
         List<SeekFileResultModel> _seekResults = new List<SeekFileResultModel>();
 
-        SeekFileResultModel CurrentDataModel
+        SeekFileResultModel CurrentResultData
         {
-            get
-            {
-                if (gvResult.SelectedCells.Count >= 1
-                    && gvResult.Rows[gvResult.SelectedCells[0].RowIndex]?.DataBoundItem is SeekFileResultModel model)
-                    return model;
-                else
-                    return null;
-            }
+            get => bsResult.Current as SeekFileResultModel;
         }
-        
+
         public FormFileSeeker(IFileSeekService fileSeekService)
         {
             InitializeComponent();
             _fileSeekService = fileSeekService;
 
             FileExtentions = new string[] { ".txt", ".log", ".cs" };
-            
+
             #region Event
             Shown += (s, e) =>
             {
@@ -105,7 +99,6 @@ namespace FilesSeeker
             };
             btnAdditionalKeyWord.Click += BtnAdditionalKeyWord_Click;
             btnFilterNext.Click += BtnFilterNext_Click;
-            btnFilterPrev.Click += BtnFilterPrev_Click;
             btnSearch.Click += BtnSearch_Click;
             txtPath.Click += TxtPath_Click;
             txtFilter.TextChanged += TxtFilter_TextChanged;
@@ -177,8 +170,6 @@ namespace FilesSeeker
                 BtnSearch_Click(btnSearch, new EventArgs());
             else if (keyData == Keys.F6)
                 BtnAdditionalKeyWord_Click(btnSearch, new EventArgs());
-            else if (keyData == Keys.F9)
-                BtnFilterPrev_Click(btnFilterPrev, new EventArgs());
             else if (keyData == Keys.F10)
                 BtnFilterNext_Click(btnFilterNext, new EventArgs());
 
@@ -204,25 +195,33 @@ namespace FilesSeeker
         {
             if (string.IsNullOrEmpty(FolderPath))
                 return;
-            if (string.IsNullOrEmpty(KeyWord))
+            if (!KeyWords.Any())
                 return;
 
-            var result = _fileSeekService.SeekInFolder(FolderPath, FileExtentions, KeyWord, IgnoreCase, IsRegex);
+            var result = _fileSeekService.SeekInFolder(FolderPath, FileExtentions, KeyWords, IgnoreCase, IsRegex);
             if (result != null && result.Any())
             {
-                FilterText = KeyWord;
+                FilterTexts = KeyWords;
                 SeekResults = result;
             }
             else
-                MessageBox.Show($"KeyWord:{KeyWord} not found");
+                MessageBox.Show($"KeyWords not found");
         }
 
         private void GvResult_SelectionChanged(object? sender, EventArgs e)
         {
             if (sender is DataGridView view && view.SelectedCells.Count > 0 && view.Rows[view.SelectedCells[0].RowIndex]?.DataBoundItem is SeekFileResultModel model)
             {
-                var matchPos = model.Data.SetFilter(FilterText, IgnoreCase);
-                SetupDisplayResult(model);
+                btnFilterNext.Tag = 0;
+                var nextPosition = model.Data.SeekNextPosition(FilterTexts, (int)(btnFilterNext.Tag ?? 0), IgnoreCase);
+                if (nextPosition != null)
+                {
+                    btnFilterNext.Tag = Math.Max(0,nextPosition.Index);
+                    if (nextPosition.Index >= 0)
+                        SetupDisplayResult(model.Data.Content, nextPosition.Content, nextPosition.Index);
+                    else
+                        MessageBox.Show($"Filter text not found");
+                }
             }
         }
 
@@ -254,22 +253,26 @@ namespace FilesSeeker
             }
         }
 
-        private void BtnFilterPrev_Click(object? sender, EventArgs e)
-        {
-            if (sender is Button view && view.Tag is int index)
-            {
-                chkHighLightMultiKey.CheckedChanged -= ChkHighLightMultiKey_CheckedChanged;
-                chkHighLightMultiKey.Checked = false;
-                chkHighLightMultiKey.CheckedChanged += ChkHighLightMultiKey_CheckedChanged;
-                SetupDisplayResult(CurrentDataModel, index);
-            }
-        }
-
         private void BtnFilterNext_Click(object? sender, EventArgs e)
         {
-            if (sender is Button view && view.Tag is int index)
+            if (CurrentResultData != null && sender is Button view && view.Tag is int index)
             {
-                SetupDisplayResult(CurrentDataModel, index);
+                var nextPosition = CurrentResultData.Data.SeekNextPosition(FilterTexts, index, IgnoreCase);
+                if (nextPosition != null)
+                {
+                    if (nextPosition.Index == index)
+                    {
+                        btnFilterNext.Tag = 0;
+                        MessageBox.Show($"Seek End!");
+                    }
+                    else if (nextPosition.Index >= 0)
+                    {
+                        btnFilterNext.Tag = Math.Max(0, nextPosition.Index);
+                        SetupDisplayResult(CurrentResultData.Data.Content, nextPosition.Content, nextPosition.Index);
+                    }
+                    else
+                        MessageBox.Show($"Filter text not found");
+                }
             }
         }
 
@@ -281,15 +284,10 @@ namespace FilesSeeker
                 KeyWordsDialog.Show();
         }
 
-        void SetupDisplayResult(SeekFileResultModel model, int posIndex = 0)
+        void SetupDisplayResult(string content, string filter, int posIndex = 0)
         {
             rtxDetail.Tag = posIndex;
-            if (model.Data.MatchPositions.Count > posIndex + 1)
-                btnFilterNext.Tag = posIndex + 1;
-            if (posIndex > 0)
-                btnFilterPrev.Tag = posIndex - 1;
-
-            ShowDisplayRsult(model.Data.Content, model.Data.FilterKey, model.Data.MatchPositions[Math.Min(posIndex, model.Data.MatchPositions.Count-1)]);
+            ShowDisplayRsult(content, filter, posIndex);
         }
 
         void ShowDisplayRsult(string Content, string filter, int filterStartIndex)
@@ -341,7 +339,11 @@ namespace FilesSeeker
                 {
                     HighLightFilter(rtx, each, Color.Orange);
                 }
-            HighLightFilter(rtx, filterKey, Color.Lime);
+
+            foreach (var each in FilterTexts)
+            {
+                HighLightFilter(rtx, each, Color.Lime);
+            }
         }
 
         void HighLightFilter(RichTextBox rtx, string filterKey, Color color)

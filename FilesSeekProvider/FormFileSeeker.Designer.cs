@@ -45,13 +45,12 @@
             ColumnLine = new DataGridViewTextBoxColumn();
             ColumnPath = new DataGridViewTextBoxColumn();
             bsResult = new BindingSource(components);
+            lblResultStatus = new Label();
             rtxDetail = new RichTextBox();
             pnlFilter = new Panel();
             txtFilter = new TextBox();
             chkHighLightMultiKey = new CheckBox();
-            btnFilterPrev = new Button();
             btnFilterNext = new Button();
-            lblResultStatus = new Label();
             pnlSearch.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)spcResult).BeginInit();
             spcResult.Panel1.SuspendLayout();
@@ -200,7 +199,7 @@
             gvResult.ReadOnly = true;
             gvResult.RowHeadersVisible = false;
             gvResult.RowTemplate.Height = 25;
-            gvResult.Size = new Size(1431, 295);
+            gvResult.Size = new Size(1431, 280);
             gvResult.TabIndex = 0;
             // 
             // ColumnFileName
@@ -224,6 +223,14 @@
             ColumnPath.Name = "ColumnPath";
             ColumnPath.ReadOnly = true;
             // 
+            // lblResultStatus
+            // 
+            lblResultStatus.Dock = DockStyle.Bottom;
+            lblResultStatus.Location = new Point(0, 280);
+            lblResultStatus.Name = "lblResultStatus";
+            lblResultStatus.Size = new Size(1431, 15);
+            lblResultStatus.TabIndex = 1;
+            // 
             // rtxDetail
             // 
             rtxDetail.Dock = DockStyle.Fill;
@@ -237,7 +244,6 @@
             // 
             pnlFilter.Controls.Add(txtFilter);
             pnlFilter.Controls.Add(chkHighLightMultiKey);
-            pnlFilter.Controls.Add(btnFilterPrev);
             pnlFilter.Controls.Add(btnFilterNext);
             pnlFilter.Dock = DockStyle.Top;
             pnlFilter.Location = new Point(0, 0);
@@ -250,7 +256,7 @@
             txtFilter.Dock = DockStyle.Fill;
             txtFilter.Location = new Point(0, 0);
             txtFilter.Name = "txtFilter";
-            txtFilter.Size = new Size(1366, 23);
+            txtFilter.Size = new Size(1391, 23);
             txtFilter.TabIndex = 3;
             // 
             // chkHighLightMultiKey
@@ -259,21 +265,11 @@
             chkHighLightMultiKey.Checked = true;
             chkHighLightMultiKey.CheckState = CheckState.Checked;
             chkHighLightMultiKey.Dock = DockStyle.Right;
-            chkHighLightMultiKey.Location = new Point(1366, 0);
+            chkHighLightMultiKey.Location = new Point(1391, 0);
             chkHighLightMultiKey.Name = "chkHighLightMultiKey";
             chkHighLightMultiKey.Size = new Size(15, 23);
             chkHighLightMultiKey.TabIndex = 4;
             chkHighLightMultiKey.UseVisualStyleBackColor = true;
-            // 
-            // btnFilterPrev
-            // 
-            btnFilterPrev.Dock = DockStyle.Right;
-            btnFilterPrev.Location = new Point(1381, 0);
-            btnFilterPrev.Name = "btnFilterPrev";
-            btnFilterPrev.Size = new Size(25, 23);
-            btnFilterPrev.TabIndex = 1;
-            btnFilterPrev.Text = "<";
-            btnFilterPrev.UseVisualStyleBackColor = true;
             // 
             // btnFilterNext
             // 
@@ -284,14 +280,6 @@
             btnFilterNext.TabIndex = 0;
             btnFilterNext.Text = ">";
             btnFilterNext.UseVisualStyleBackColor = true;
-            // 
-            // lblResultStatus
-            // 
-            lblResultStatus.Dock = DockStyle.Bottom;
-            lblResultStatus.Location = new Point(0, 280);
-            lblResultStatus.Name = "lblResultStatus";
-            lblResultStatus.Size = new Size(1431, 15);
-            lblResultStatus.TabIndex = 1;
             // 
             // FormFileSeeker
             // 
@@ -331,7 +319,6 @@
         private RichTextBox rtxDetail;
         private Panel pnlFilter;
         private TextBox txtFilter;
-        private Button btnFilterPrev;
         private Button btnFilterNext;
         private BindingSource bsResult;
         private DataGridViewTextBoxColumn ColumnFileName;

@@ -16,7 +16,7 @@ namespace Service.Model
         {
             FileName = System.IO.Path.GetFileName(path);
             Path = path;
-            Line = deail.Line;
+            Line = deail.Index;
             Data = deail;
         }
         public string FileName { get; set; }
@@ -24,36 +24,47 @@ namespace Service.Model
         public int Line { get; set; }
         public SeekResultDetailModel Data { get; set; }
     }
-    public class SeekResultDetailModel
+    public class SeekResultDetailModel : IndexContentModel
     {
-        public int Line { get; set; }
-        public string Content { get; set; }
-        public string FilterKey { get; set; }
-        public List<int> MatchPositions { get; set; }
-
-        public List<int> SetFilter(string filter, bool ignoreCase = false)
+        public IndexContentModel SeekNextPosition(string[] filter, int startIndex, bool ignoreCase = false)
         {
-            if (FilterKey == filter && MatchPositions != null && MatchPositions.Any())
-                return MatchPositions;
+            var results = filter.Select(s => SeekNextPosition(s, startIndex, ignoreCase)).Where(w => w.Index > 0).ToList();
+            return results.Any(a => a.Index == results.Min(m => m.Index)) ? results.FirstOrDefault(f => f.Index == results.Min(m => m.Index)) : new IndexContentModel();
+        }
 
-            MatchPositions = new List<int>();
-            FilterKey = filter;
-            int seekindex = 0;
+        IndexContentModel SeekNextPosition(string filter, int startIndex, bool ignoreCase = false)
+        {
+            if (string.IsNullOrEmpty(filter))
+                return new IndexContentModel();
 
+            if (Content == filter)
+                return new IndexContentModel(0, Content);
+
+            int seekindex = startIndex + 1;
             while (seekindex + filter.Length <= Content.Length)
             {
                 var searchIndex = Content.IndexOf(filter, seekindex, ignoreCase ? StringComparison.CurrentCultureIgnoreCase : StringComparison.CurrentCulture);
                 if (searchIndex > 1)
                 {
-                    MatchPositions.Add(searchIndex);
-                    seekindex = searchIndex + 1;
+                    return new IndexContentModel(searchIndex, filter);
                 }
                 else
                 {
                     break;
                 }
             }
-            return MatchPositions;
+            return new IndexContentModel();
         }
+    }
+    public class IndexContentModel
+    {
+        public IndexContentModel(int index=-1,string content="")
+        {
+            Index = index;
+            Content = content;
+        }
+
+        public int Index { get; set; } = -1;
+        public string Content { get; set; }
     }
 }

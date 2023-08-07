@@ -15,14 +15,14 @@ namespace Service
 {
     internal class FileSeekService : IFileSeekService
     {
-        public List<SeekFileResultModel> SeekInFolder(string path, string[] fileExtension, string keyword, bool isIgnoreCase = false, bool isRegex = false)
+        public List<SeekFileResultModel> SeekInFolder(string path, string[] fileExtension, string[] keywords, bool isIgnoreCase = false, bool isRegex = false)
         {
             #region Input validation
             if (string.IsNullOrEmpty(path))
             {
                 throw new ArgumentException("foler path required");
             }
-            if (string.IsNullOrEmpty(keyword))
+            if (!keywords.Any())
             {
                 throw new ArgumentException("Must be setup keyword");
             }
@@ -37,7 +37,7 @@ namespace Service
 
             tasks = files.Select(s => Task.Run(() =>
             {
-                var result = SeekInFile(s, keyword, isIgnoreCase, isRegex);
+                var result = SeekInFile(s, keywords, isIgnoreCase, isRegex);
                 if (result != null)
                 {
                     foreach (var each in result)
@@ -49,19 +49,24 @@ namespace Service
             return results.ToList();
         }
         
-        List<SeekFileResultModel> SeekInFile(string path, string keyword, bool isIgnoreCase = false, bool isRegex = false)
+        List<SeekFileResultModel> SeekInFile(string path, string[] keywords, bool isIgnoreCase = false, bool isRegex = false)
         {
             var fileContent = File.ReadAllLines(path);
-            var contentList = fileContent.Select((s, i) => new SeekResultDetailModel { Line = i + 1, Content = s }).ToList();
-            Expression<Func<SeekResultDetailModel, bool>> filter = f => true;
+            var contentList = fileContent.Select((s, i) => new SeekResultDetailModel { Index = i + 1, Content = s }).ToList();
+            Expression<Func<SeekResultDetailModel, bool>> filter = f => false;
 
-            if (isRegex)
+            foreach (var keyword in keywords)
             {
-                filter = filter.AndAlso(f => Regex.IsMatch(f.Content, keyword, isIgnoreCase ? RegexOptions.IgnoreCase : RegexOptions.None));
-            }
-            else
-            {
-                filter = filter.AndAlso(f => f.Content.Contains(keyword, isIgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.CurrentCulture));
+                Expression<Func<SeekResultDetailModel, bool>> seekfilter = f => true;
+                if (isRegex)
+                {
+                    seekfilter = seekfilter.AndAlso(f => Regex.IsMatch(f.Content, keyword, isIgnoreCase ? RegexOptions.IgnoreCase : RegexOptions.None));
+                }
+                else
+                {
+                    seekfilter = seekfilter.AndAlso(f => f.Content.Contains(keyword, isIgnoreCase ? StringComparison.OrdinalIgnoreCase : StringComparison.CurrentCulture));
+                }
+                filter = filter.OrElse(seekfilter);
             }
 
             var result = contentList
