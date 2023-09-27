@@ -289,7 +289,7 @@
             Controls.Add(spcResult);
             Controls.Add(pnlSearch);
             Name = "FormFileSeeker";
-            Text = "FormFileSeeker";
+            Text = "FileSeeker";
             pnlSearch.ResumeLayout(false);
             pnlSearch.PerformLayout();
             spcResult.Panel1.ResumeLayout(false);

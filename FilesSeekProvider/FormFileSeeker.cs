@@ -17,6 +17,7 @@ namespace FilesSeeker
 {
     public partial class FormFileSeeker : Form
     {
+
         IFileSeekService _fileSeekService;
 
         string[] FileExtentions;
@@ -198,11 +199,14 @@ namespace FilesSeeker
             if (!KeyWords.Any())
                 return;
 
+            //var result = _fileSeekService.SeekFromPath(FolderPath, FileExtentions, KeyWords, IgnoreCase, IsRegex);
+
             var result = _fileSeekService.SeekInFolder(FolderPath, FileExtentions, KeyWords, IgnoreCase, IsRegex);
+
             if (result != null && result.Any())
             {
                 FilterTexts = KeyWords;
-                SeekResults = result;
+                SeekResults = result.ToList();
             }
             else
                 MessageBox.Show($"KeyWords not found");
@@ -297,7 +301,7 @@ namespace FilesSeeker
                 int displayStartIndex = 0;
                 int displayEndIndex = Content.Length;
                 string prefix = "";
-                string nextfix = "";
+                string endfix = "";
                 if (filterStartIndex > 500)
                 {
                     displayStartIndex = filterStartIndex - 500;
@@ -306,10 +310,10 @@ namespace FilesSeeker
                 if (Content.Length > filterStartIndex + filter.Length + 700)
                 {
                     displayEndIndex = filterStartIndex + filter.Length + 700;
-                    nextfix = $"{Environment.NewLine}more....({Content.Length - displayEndIndex - filter.Length})";
+                    endfix = $"{Environment.NewLine}more....({Content.Length - displayEndIndex - filter.Length})";
                 }
 
-                var displayString = $"{prefix}{Content.Substring(displayStartIndex, displayEndIndex - displayStartIndex)}{nextfix}";
+                var displayString = $"{prefix}{Content.Substring(displayStartIndex, displayEndIndex - displayStartIndex)}{endfix}";
                 if (rtxDetail.Text != displayString)
                     rtxDetail.Text = displayString;
 

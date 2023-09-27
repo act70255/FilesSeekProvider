@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -84,6 +85,24 @@ namespace FilesSeeker
             Controls.Add(pnlContent);
 
             this.ResumeLayout(false);
+
+
+            Task.Run(async () =>
+            {
+                while (true)
+                {
+                    await Task.Delay(1000);
+                    if(!this.Visible)
+                        continue;
+                    PerformanceCounter cpuCounter = new PerformanceCounter("Processor", "% Processor Time", "_Total");
+                    PerformanceCounter ramCounter = new PerformanceCounter("Memory", "Available MBytes");
+                    this.BeginInvoke(new Action(() =>
+                    {
+                        this.Text = $"CPU:{cpuCounter.NextValue()} | MEM:{ramCounter.NextValue()} ";//| NET:{bandwidthCounter.NextValue()}";
+                        this.Refresh();
+                    }));
+                }
+            });
 
             Shown += FormAdditionalSourceDialog_Shown;
             txtKeyword.KeyPress += TxtKeyword_KeyPress;

@@ -10,5 +10,6 @@ namespace Service.Interface
     public interface IFileSeekService
     {
         List<SeekFileResultModel> SeekInFolder(string path, string[] fileExtension, string[] keywords, bool isIgnoreCase = false, bool isRegex = false);
+        IEnumerable<KeyValuePair<string, IEnumerable<SeekFileResultModel>>> SeekFromPath(string path, string[] fileExtension, string[] keywords, bool isIgnoreCase = false, bool isRegex = false);
     }
 }

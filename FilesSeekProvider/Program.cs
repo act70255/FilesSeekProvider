@@ -17,6 +17,8 @@ namespace FilesSeeker
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
 
+            BenchmarkDotNet.Running.BenchmarkRunner.Run<Service.FileSeekService>();
+
             ApplicationConfiguration.Initialize();
 
             container = Service.Infrastructure.DIRegister.Instence.Register(container);

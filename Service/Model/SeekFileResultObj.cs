@@ -26,7 +26,7 @@ namespace Service.Model
     }
     public class SeekResultDetailModel : IndexContentModel
     {
-        public IndexContentModel SeekNextPosition(string[] filter, int startIndex, bool ignoreCase = false)
+        public IndexContentModel? SeekNextPosition(string[] filter, int startIndex, bool ignoreCase = false)
         {
             var results = filter.Select(s => SeekNextPosition(s, startIndex, ignoreCase)).Where(w => w.Index > 0).ToList();
             return results.Any(a => a.Index == results.Min(m => m.Index)) ? results.FirstOrDefault(f => f.Index == results.Min(m => m.Index)) : new IndexContentModel();
