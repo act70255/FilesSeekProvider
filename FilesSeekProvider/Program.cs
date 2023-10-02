@@ -17,7 +17,7 @@ namespace FilesSeeker
             // To customize application configuration such as set high DPI settings or default font,
             // see https://aka.ms/applicationconfiguration.
 
-            BenchmarkDotNet.Running.BenchmarkRunner.Run<Service.FileSeekService>();
+            //BenchmarkDotNet.Running.BenchmarkRunner.Run<Service.FileSeekService>();
 
             ApplicationConfiguration.Initialize();
 
@@ -26,7 +26,7 @@ namespace FilesSeeker
             using (var scope = container.BeginLifetimeScope())
             {
                 //Application.Run(new FormMain(scope.Resolve<IFileSeekService>()));
-                Application.Run(new FormFileSeeker(scope.Resolve<IFileSeekService>()));
+                Application.Run(new FormSeeker(scope.Resolve<IFileSeekService>()));
             }
         }
     }

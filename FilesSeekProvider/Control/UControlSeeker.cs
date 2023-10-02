@@ -1,5 +1,6 @@
-﻿using Microsoft.VisualBasic.Devices;
+﻿using Microsoft.Diagnostics.Runtime.Utilities;
 using Microsoft.Win32;
+using Service;
 using Service.Interface;
 using Service.Model;
 using System;
@@ -9,98 +10,57 @@ using System.Data;
 using System.Diagnostics;
 using System.Drawing;
 using System.Linq;
+using System.Linq.Expressions;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using Utility.Extension;
 
 namespace FilesSeeker
 {
-    public partial class FormFileSeeker : Form
+    public partial class UControlSeeker : UserControl
     {
-
         IFileSeekService _fileSeekService;
+        public FormAdditionalSourceDialog KeyWordsDialog = new FormAdditionalSourceDialog();
+        string[] FileExtentions = new string[] { ".txt", ".log", ".cs" };
+        EventHandler<List<SeekResultModel>> seekHandler;
 
-        string[] FileExtentions;
-        FormAdditionalSourceDialog KeyWordsDialog = new FormAdditionalSourceDialog();
-
-        public bool IgnoreCase
-        {
-            get => chkIgnoreCase.Checked;
-            set => chkIgnoreCase.Checked = value;
-        }
-
-        public bool IsRegex
-        {
-            get => chkRegex.Checked;
-            set => chkRegex.Checked = value;
-        }
-
-        public string[] KeyWords
-        {
-            get => txtKeyword.Text.Split(';');
-            set => txtKeyword.Text = string.Join(';', value);
-        }
-
+        public bool IsRegex => chkRegex.Checked;
+        public bool IgnoreCase => chkIgnoreCase.Checked;
+        public string KeyWord => txtKeyword.Text;
+        public string SeekPath => txtPath.Text;
+        public string PathKeyword => txtPathKeyword.Text;
+        public bool FilterAdditionalKeywords => chkAdditionalFilter.Checked;
         public string[] FilterTexts
         {
             get => txtFilter.Text.Split(';');
             set => txtFilter.Text = string.Join(';', value);
         }
-
-        public string FolderPath
-        {
-            get => txtPath.Text;
-            set => txtPath.Text = value;
-        }
-
         public List<string> AdditionalKeyWord
         {
             get { return KeyWordsDialog.DataSource; }
         }
-
-        public bool FilterAdditionalKeywords
+        SeekResultModel CurrentData
         {
-            get { return chkAdditionalFilter.Checked; }
+            get => _bindingSource.Current as SeekResultModel;
         }
-
-        public List<SeekFileResultModel> SeekResults
-        {
-            get => _seekResults;
-            set
-            {
-                _seekResults = value;
-                var viewSource = value.AsQueryable();
-                if (FilterAdditionalKeywords && AdditionalKeyWord.Any())
-                    viewSource = viewSource.Where(f => AdditionalKeyWord.Any(a => f.Data.Content.Contains(a)));
-                lblResultStatus.Text = $"{viewSource.Count()} match results";
-                bsResult.DataSource = viewSource.OrderBy(o => o.FileName).ToList();
-                gvResult.AutoResizeColumns();
-                gvResult.AutoResizeRows();
-            }
-        }
-        List<SeekFileResultModel> _seekResults = new List<SeekFileResultModel>();
-
-        SeekFileResultModel CurrentResultData
-        {
-            get => bsResult.Current as SeekFileResultModel;
-        }
-
-        public FormFileSeeker(IFileSeekService fileSeekService)
+        private BindingSource _bindingSource { get; set; } = new BindingSource();
+        private int _viewPosition = -1;
+        public UControlSeeker(IFileSeekService fileSeekService)
         {
             InitializeComponent();
             _fileSeekService = fileSeekService;
-
-            FileExtentions = new string[] { ".txt", ".log", ".cs" };
-
+            gvResult.DataSource = _bindingSource;
             #region Event
-            Shown += (s, e) =>
+            Load += (s, e) =>
             {
                 txtKeyword.Focus();
-                BtnAdditionalKeyWord_Click(this, new EventArgs());
+                //BtnAdditionalKeyWord_Click(this, new EventArgs());
             };
             btnAdditionalKeyWord.Click += BtnAdditionalKeyWord_Click;
-            btnFilterNext.Click += BtnFilterNext_Click;
             btnSearch.Click += BtnSearch_Click;
+            btnExtract.Click += BtnExtract_Click;
             txtPath.Click += TxtPath_Click;
             txtFilter.TextChanged += TxtFilter_TextChanged;
             txtKeyword.KeyPress += TxtKeyword_KeyPress;
@@ -109,14 +69,9 @@ namespace FilesSeeker
             chkHighLightMultiKey.CheckedChanged += ChkHighLightMultiKey_CheckedChanged;
             KeyWordsDialog.FormClosing += KeyWordsDialog_FormClosing;
             KeyWordsDialog.SourceChanged += KeyWordsDialog_SourceChanged;
-            chkAdditionalFilter.CheckedChanged += ChkAdditionalFilter_CheckedChanged;
             #endregion
         }
-
-        private void ChkAdditionalFilter_CheckedChanged(object? sender, EventArgs e)
-        {
-            SeekResults = SeekResults;
-        }
+        #region Events
 
         private void KeyWordsDialog_SourceChanged(object? sender, EventArgs e)
         {
@@ -153,27 +108,27 @@ namespace FilesSeeker
             ClearHighLight(rtxDetail);
             HighLightFilter(rtxDetail, txtFilter.Text);
         }
-
         protected override bool ProcessCmdKey(ref Message msg, Keys keyData)
         {
-            if (keyData == Keys.F1)
-                IgnoreCase = !IgnoreCase;
-            else if (keyData == Keys.F2)
-                IsRegex = !IsRegex;
-            else if (keyData == Keys.F3)
+            switch (keyData)
             {
-                txtKeyword.Clear();
-                txtKeyword.Focus();
+                case Keys.F1:
+                    TxtPath_Click(txtPath, new EventArgs());
+                    break;
+                case Keys.F2:
+                    txtKeyword.Clear();
+                    txtKeyword.Focus();
+                    break;
+                case Keys.F3:
+                    chkIgnoreCase.Checked = !IgnoreCase;
+                    break;
+                case Keys.F4:
+                    chkRegex.Checked = !IsRegex;
+                    break;
+                case Keys.F5:
+                    BtnSearch_Click(btnSearch, new EventArgs());
+                    break;
             }
-            else if (keyData == Keys.F4)
-                TxtPath_Click(txtPath, new EventArgs());
-            else if (keyData == Keys.F5)
-                BtnSearch_Click(btnSearch, new EventArgs());
-            else if (keyData == Keys.F6)
-                BtnAdditionalKeyWord_Click(btnSearch, new EventArgs());
-            else if (keyData == Keys.F10)
-                BtnFilterNext_Click(btnFilterNext, new EventArgs());
-
             return base.ProcessCmdKey(ref msg, keyData);
         }
 
@@ -185,7 +140,7 @@ namespace FilesSeeker
 
                 if (result == DialogResult.OK && !string.IsNullOrWhiteSpace(fbd.SelectedPath))
                 {
-                    FolderPath = fbd.SelectedPath;
+                    txtPath.Text = fbd.SelectedPath;
                     if (!string.IsNullOrEmpty(txtKeyword.Text))
                         btnSearch.Focus();
                 }
@@ -194,38 +149,60 @@ namespace FilesSeeker
 
         private void BtnSearch_Click(object? sender, EventArgs e)
         {
-            if (string.IsNullOrEmpty(FolderPath))
+            if (string.IsNullOrEmpty(SeekPath))
                 return;
-            if (!KeyWords.Any())
+            if (string.IsNullOrEmpty(KeyWord))
                 return;
 
-            //var result = _fileSeekService.SeekFromPath(FolderPath, FileExtentions, KeyWords, IgnoreCase, IsRegex);
+            _bindingSource.Clear();
+            txtFilter.Text = KeyWord;
 
-            var result = _fileSeekService.SeekInFolder(FolderPath, FileExtentions, KeyWords, IgnoreCase, IsRegex);
+            btnSearch.Enabled = false;
+            var currentFile = string.Empty;
 
-            if (result != null && result.Any())
-            {
-                FilterTexts = KeyWords;
-                SeekResults = result.ToList();
-            }
-            else
-                MessageBox.Show($"KeyWords not found");
+            var result = _fileSeekService.ProcessSeekTask(SeekPath, txtPathKeyword.Text, txtKeyword.Text, "*.*", IgnoreCase, IsRegex);
+
+            lblResultStatus.Text = $"{result.Count(f => f.Line > 0)}";
+            _bindingSource.DataSource = result.Where(f => f.Line > 0);
+            gvResult.AutoResizeColumns();
+            //Task.Run(() =>
+            //{
+            //    var totalCount = result.Count(c => c.Line > 0);
+            //    foreach (var each in result)
+            //    {
+            //        this.Invoke(new Action(() =>
+            //        {
+            //            if (each.Line < 0 || string.IsNullOrEmpty(each.Content))
+            //            {
+            //                currentFile = each.Path;
+            //            }
+            //            else
+            //            {
+            //                _bindingSource.Add(each);
+            //                if (_bindingSource.Count % 10 == 1)
+            //                    gvResult.AutoResizeColumns();
+            //            }
+            //            lblResultStatus.Text = $"[{totalCount} / {_bindingSource.Count}] {currentFile}";
+            //        }));
+            //    }
+            //}).GetAwaiter();
+            btnSearch.Enabled = true;
         }
 
         private void GvResult_SelectionChanged(object? sender, EventArgs e)
         {
-            if (sender is DataGridView view && view.SelectedCells.Count > 0 && view.Rows[view.SelectedCells[0].RowIndex]?.DataBoundItem is SeekFileResultModel model)
+            if (sender is DataGridView view && view.SelectedCells.Count > 0 && view.Rows[view.SelectedCells[0].RowIndex]?.DataBoundItem is SeekResultModel model)
             {
-                btnFilterNext.Tag = 0;
-                var nextPosition = model.Data.SeekNextPosition(FilterTexts, (int)(btnFilterNext.Tag ?? 0), IgnoreCase);
-                if (nextPosition != null)
+                //btnFilterNext.Tag = 0;
+                _viewPosition = -1;
+                var nextPosition = model.SeekNextPosition(KeyWord, _viewPosition, IgnoreCase);
+                if (nextPosition >= 0)
                 {
-                    btnFilterNext.Tag = Math.Max(0,nextPosition.Index);
-                    if (nextPosition.Index >= 0)
-                        SetupDisplayResult(model.Data.Content, nextPosition.Content, nextPosition.Index);
-                    else
-                        MessageBox.Show($"Filter text not found");
+                    SetupDisplayResult(model.Content, KeyWord, nextPosition);
+                    _viewPosition = nextPosition;
                 }
+                else
+                    MessageBox.Show($"Filter text not found");
             }
         }
 
@@ -233,7 +210,7 @@ namespace FilesSeeker
         {
             if (e.KeyChar == (char)Keys.Return)
             {
-                if (string.IsNullOrEmpty(FolderPath))
+                if (string.IsNullOrEmpty(SeekPath))
                     TxtPath_Click(txtPath, new EventArgs());
             }
         }
@@ -242,7 +219,7 @@ namespace FilesSeeker
         {
             if (e.RowIndex < 0)
                 return;
-            else if (sender is DataGridView view && view.Rows[e.RowIndex]?.DataBoundItem is SeekFileResultModel model)
+            else if (sender is DataGridView view && view.Rows[e.RowIndex]?.DataBoundItem is SeekResultModel model)
             {
                 var nppDir = (string)Registry.GetValue("HKEY_LOCAL_MACHINE\\SOFTWARE\\Notepad++", null, null);
                 var nppExePath = Path.Combine(nppDir, "Notepad++.exe");
@@ -257,28 +234,28 @@ namespace FilesSeeker
             }
         }
 
-        private void BtnFilterNext_Click(object? sender, EventArgs e)
-        {
-            if (CurrentResultData != null && sender is Button view && view.Tag is int index)
-            {
-                var nextPosition = CurrentResultData.Data.SeekNextPosition(FilterTexts, index, IgnoreCase);
-                if (nextPosition != null)
-                {
-                    if (nextPosition.Index == index)
-                    {
-                        btnFilterNext.Tag = 0;
-                        MessageBox.Show($"Seek End!");
-                    }
-                    else if (nextPosition.Index >= 0)
-                    {
-                        btnFilterNext.Tag = Math.Max(0, nextPosition.Index);
-                        SetupDisplayResult(CurrentResultData.Data.Content, nextPosition.Content, nextPosition.Index);
-                    }
-                    else
-                        MessageBox.Show($"Filter text not found");
-                }
-            }
-        }
+        //private void BtnFilterNext_Click(object? sender, EventArgs e)
+        //{
+        //    if (CurrentData != null && sender is Button view && view.Tag is int index)
+        //    {
+        //        var nextPosition = CurrentData.Data.SeekNextPosition(FilterTexts, index, IgnoreCase);
+        //        if (nextPosition != null)
+        //        {
+        //            if (nextPosition.Index == index)
+        //            {
+        //                btnFilterNext.Tag = 0;
+        //                MessageBox.Show($"Seek End!");
+        //            }
+        //            else if (nextPosition.Index >= 0)
+        //            {
+        //                btnFilterNext.Tag = Math.Max(0, nextPosition.Index);
+        //                SetupDisplayResult(CurrentResultData.Data.Content, nextPosition.Content, nextPosition.Index);
+        //            }
+        //            else
+        //                MessageBox.Show($"Filter text not found");
+        //        }
+        //    }
+        //}
 
         private void BtnAdditionalKeyWord_Click(object? sender, EventArgs e)
         {
@@ -288,9 +265,19 @@ namespace FilesSeeker
                 KeyWordsDialog.Show();
         }
 
+        private void BtnExtract_Click(object? sender, EventArgs e)
+        {
+            var keywords = AdditionalKeyWord.ToArray();
+            //add string to keyowrds
+            if (!string.IsNullOrEmpty(KeyWord))
+                keywords = keywords.Append(KeyWord).ToArray();
+
+            var result = _fileSeekService.ExtractByKeyword(SeekPath, keywords, PathKeyword);
+        }
+        #endregion
+        #region DisplayData
         void SetupDisplayResult(string content, string filter, int posIndex = 0)
         {
-            rtxDetail.Tag = posIndex;
             ShowDisplayRsult(content, filter, posIndex);
         }
 
@@ -367,5 +354,6 @@ namespace FilesSeeker
                 startindex += wordstartIndex + filterKey.Length;
             }
         }
+        #endregion
     }
 }

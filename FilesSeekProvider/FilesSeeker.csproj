@@ -9,7 +9,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Folder Include="Extention\" />
+    <Compile Remove="Extention\**" />
+    <EmbeddedResource Remove="Extention\**" />
+    <None Remove="Extention\**" />
   </ItemGroup>
 
   <ItemGroup>

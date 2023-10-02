@@ -9,7 +9,8 @@ namespace Service.Interface
 {
     public interface IFileSeekService
     {
-        List<SeekFileResultModel> SeekInFolder(string path, string[] fileExtension, string[] keywords, bool isIgnoreCase = false, bool isRegex = false);
-        IEnumerable<KeyValuePair<string, IEnumerable<SeekFileResultModel>>> SeekFromPath(string path, string[] fileExtension, string[] keywords, bool isIgnoreCase = false, bool isRegex = false);
+        IEnumerable<SeekResultModel> ProcessSeek(string path, string pathKeyword, string keyWord, string searchPattern = "*.*", bool isIgnoreCase = false, bool isRegex = false);
+        public List<SeekResultModel> ProcessSeekTask(string path, string pathKeyword, string rawkeyWord, string searchPattern = "*.*", bool isIgnoreCase = false, bool isRegex = false);
+        string ExtractByKeyword(string path, string[] keywords, string fileKey = "");
     }
 }

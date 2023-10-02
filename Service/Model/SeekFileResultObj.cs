@@ -67,4 +67,36 @@ namespace Service.Model
         public int Index { get; set; } = -1;
         public string Content { get; set; }
     }
+
+    public class  SeekResultModel
+    {
+        public string FileName { get; set; }
+        public string Path { get; set; }
+        public int Line { get; set; }
+        public string Content { get; set; }
+
+        public int SeekNextPosition(string filter, int startIndex, bool ignoreCase = false)
+        {
+            if (string.IsNullOrEmpty(filter))
+                return -1;
+
+            if (Content == filter)
+                return 0;
+
+            int seekindex = startIndex + 1;
+            while (seekindex + filter.Length <= Content.Length)
+            {
+                var searchIndex = Content.IndexOf(filter, seekindex, ignoreCase ? StringComparison.CurrentCultureIgnoreCase : StringComparison.CurrentCulture);
+                if (searchIndex > 1)
+                {
+                    return searchIndex;
+                }
+                else
+                {
+                    break;
+                }
+            }
+            return -1;
+        }
+    }
 }
